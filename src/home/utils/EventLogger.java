@@ -16,10 +16,6 @@ import java.util.Date;
  ***************************/
 
 /********** TODO ************
- * Priority:
- * > Clean up commented stuff and make sure all functionality is implemented
- * > Refactor the logs to fit a standard log format such as syslog
- * 
  * Later:
  * > Add ability to retrieve logs (e.g. by date or date range, etc)
  ***************************/
@@ -31,7 +27,6 @@ import java.util.Date;
  * Fri Sep 14 07:57:38 PDT 2018 ProdPi MyApp: Closed dialog box
  * Fri Sep 14 07:57:38 PDT 2018 ProdPi MyApp: Received response: <SOME TEXT HERE>		
  * 
- * Consider adding info about the module that sent the message
  */
 
 
@@ -113,12 +108,10 @@ public class EventLogger {
 	{
 		if (log_out_file!=null)
 		{
-			// System.out.println("Closing output file");
 				try {
 					writer.close();
 					log_out_file.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				log_out_file = null;
@@ -127,12 +120,10 @@ public class EventLogger {
 		
 		if (log_in_file!=null)
 		{
-			//System.out.println("Closing input file");
 				try {
 					reader.close();
 					log_in_file.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				log_in_file = null;

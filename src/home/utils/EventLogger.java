@@ -17,7 +17,6 @@ import java.util.Date;
 
 /********** TODO ************
  * Priority:
- * > Refactor variables to be less C like
  * > Clean up commented stuff and make sure all functionality is implemented
  * > Refactor the logs to fit a standard log format such as syslog
  * 
@@ -27,10 +26,10 @@ import java.util.Date;
 
 /*
  * Example Message Format:
- * [HI] [Fri Sep 14 07:57:38 PDT 2018] Connected to host				// [HI], [LO], etc indicates priority level
- * [HI] [Fri Sep 14 07:57:38 PDT 2018] Sent message: <SOME TEXT HERE>		
- * [LO] [Fri Sep 14 07:57:38 PDT 2018] Closed dialog box
- * [HI] [Fri Sep 14 07:57:38 PDT 2018] Received response: <SOME TEXT HERE>		
+ * Fri Sep 14 07:57:38 PDT 2018 hostname AppName: OptionalTag: Message
+ * Fri Sep 14 07:57:38 PDT 2018 ProdPi MyApp: Sent message: <SOME TEXT HERE>		
+ * Fri Sep 14 07:57:38 PDT 2018 ProdPi MyApp: Closed dialog box
+ * Fri Sep 14 07:57:38 PDT 2018 ProdPi MyApp: Received response: <SOME TEXT HERE>		
  * 
  * Consider adding info about the module that sent the message
  */
@@ -40,27 +39,28 @@ import java.util.Date;
 public class EventLogger {
 
 	// For writing to the data log
-	private FileWriter m_logOutFile = null;
-	private BufferedWriter m_writer = null;
+	private FileWriter log_out_file = null;
+	private BufferedWriter writer = null;
 	
 	// For reading from the data log
-	private BufferedReader m_reader = null;
-	private FileReader m_logInFile = null;
-	private String m_fileName = "log.txt"; // set a default log file name 
-	private String m_rotFileName = "log.txt"; // a modified version of the filename (for rotating logs)
+	private BufferedReader reader = null;
+	private FileReader log_in_file = null;
+	private String file_name = "log.txt"; // set a default log file name 
+	private String rot_file_name = "log.txt"; // a modified version of the filename (for rotating logs)
 	private int day = 0; // the day of the week which is used to determine if rotating a log is necessary
 	
-	// Used to filter out lower priority messages
-	private boolean m_bShowHighPriorityOnly = false;
+	private Date date = new Date();
 	
-	private Date m_Date = new Date();
+	private String hostname = "";
+	private String app_name = "";
 	
 	//public boolean m_bIncludeTimeStamp = true;
 	private boolean rotate_logs = true;
+		
 	
 	public void SetFilename(String s)
 	{
-		m_fileName = s;
+		file_name = s;
 	}
 	
 	public void SetRotateLogs(boolean b)
@@ -68,97 +68,119 @@ public class EventLogger {
 		rotate_logs = b;
 	}
 	
+	public void SetHostName(String hn)
+	{
+		hostname = hn;
+	}
+	
+	public void SetAppName(String an)
+	{
+		app_name = an;
+	}
+	
 	private void OpenLogFile(boolean _for_writing)
 	{
 		if(rotate_logs)
 			CheckFileName();
 		else
-			m_rotFileName = m_fileName;
+			rot_file_name = file_name;
 			
 		if(_for_writing)
 		{
 			try {
-				m_logOutFile = new FileWriter(m_rotFileName, true);
+				log_out_file = new FileWriter(rot_file_name, true);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			
-			m_writer = new BufferedWriter(m_logOutFile);
+			writer = new BufferedWriter(log_out_file);
 		}
 		else
 		{
 			try {
-				m_logInFile = new FileReader(m_rotFileName);
+				log_in_file = new FileReader(rot_file_name);
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			}
 			
-			m_reader = new BufferedReader(m_logInFile);
+			reader = new BufferedReader(log_in_file);
 		}
 	}
 	
 	private void CloseLogFile()
 	{
-		if (m_logOutFile!=null)
+		if (log_out_file!=null)
 		{
 			// System.out.println("Closing output file");
 				try {
-					m_writer.close();
-					m_logOutFile.close();
+					writer.close();
+					log_out_file.close();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				m_logOutFile = null;
-				m_writer = null;
+				log_out_file = null;
+				writer = null;
 		}
 		
-		if (m_logInFile!=null)
+		if (log_in_file!=null)
 		{
 			//System.out.println("Closing input file");
 				try {
-					m_reader.close();
-					m_logInFile.close();
+					reader.close();
+					log_in_file.close();
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				m_logInFile = null;
-				m_reader = null;
+				log_in_file = null;
+				reader = null;
 		}
 	}
 	
-	public void LogMessage_Low(String s)
+	public void LogMessage(String msg)
 	{
-		LogMessage(s, 1);
+		LogMessageWithTag(msg, "");
 	}
 	
-	public void LogMessage_High(String s)
-	{
-		LogMessage(s, 2);
-	}
-	
-	private void LogMessage(String s, int priority)
+	public void LogMessageWithTag(String msg, String tag)
 	{
 		// Write message in log with high priority tag
 		OpenLogFile(true);
 		
 		// Date objects don't update with the current time so they need to be reinitialized
-		m_Date = new Date();
+		date = new Date();
+		
+		// Fri Sep 14 07:57:38 PDT 2018 hostname AppName: OptionalTag: Message
+		StringBuilder sb = new StringBuilder();
+		sb.append(date.toString());
+		sb.append(" ");
+		if(hostname != "")
+		{
+			sb.append(hostname);
+			sb.append(" ");
+		}
+		if(app_name != "")
+		{
+			sb.append(app_name);
+			sb.append(": ");
+		}
+		if(tag != "")
+		{
+			sb.append(tag);
+			sb.append(": ");
+		}
+		sb.append(msg);
 
-		// write [HI], append message, append new line
-		if (m_logOutFile != null)
+		// move to next line and write the message
+		if (log_out_file != null)
 		{
 			try {
-				m_writer.newLine();
-				if(priority==2)
-					m_writer.write("[HI] [" + m_Date.toString() + "] " + s);
-				else
-					m_writer.write("[LO] [" + m_Date.toString() + "] " + s);
+				writer.newLine();
+				writer.write(sb.toString());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -172,14 +194,14 @@ public class EventLogger {
 		// > filename
 		// > day number
 		// > extension
-		int loc = m_fileName.lastIndexOf('.');
-		String fn = m_fileName.substring(0, loc);
-		String ext = m_fileName.substring(loc);
-		//int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
-		int tmp_day = Calendar.getInstance().get(Calendar.SECOND)/10; // FOR DEBUGGING: Rotate log every 10 seconds
+		int loc = file_name.lastIndexOf('.');
+		String fn = file_name.substring(0, loc);
+		String ext = file_name.substring(loc);
+		int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+		//int tmp_day = Calendar.getInstance().get(Calendar.SECOND)/10; // FOR DEBUGGING: Rotate log every 10 seconds
 		
 		// Set the target file name:
-		m_rotFileName = fn + Integer.toString(tmp_day) + ext;
+		rot_file_name = fn + Integer.toString(tmp_day) + ext;
 		
 		// If the day has changed, we need to rotate the log by deleting the contents of the new target log
 		if(tmp_day != day)
@@ -189,7 +211,7 @@ public class EventLogger {
 			
 			// Erase the file contents
 			try {
-				BufferedWriter tmp_writer = new BufferedWriter(new FileWriter(m_rotFileName));
+				BufferedWriter tmp_writer = new BufferedWriter(new FileWriter(rot_file_name));
 				tmp_writer.close();
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
@@ -208,7 +230,7 @@ public class EventLogger {
 		OpenLogFile(false);
 		
 		try {
-		    while ((sCurrentLine = m_reader.readLine()) != null) {
+		    while ((sCurrentLine = reader.readLine()) != null) {
 		        //System.out.println(sCurrentLine);
 				sLastLine = sCurrentLine;
 		    }

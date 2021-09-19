@@ -190,26 +190,44 @@ public class EventLogger {
 		int loc = file_name.lastIndexOf('.');
 		String fn = file_name.substring(0, loc);
 		String ext = file_name.substring(loc);
-		int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
-		//int tmp_day = Calendar.getInstance().get(Calendar.SECOND)/10; // FOR DEBUGGING: Rotate log every 10 seconds
+		//int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+		int tmp_day = Calendar.getInstance().get(Calendar.SECOND)/10; // FOR DEBUGGING: Rotate log every 10 seconds
 		
 		// Set the target file name:
 		rot_file_name = fn + Integer.toString(tmp_day) + ext;
 		
-		// If the day has changed, we need to rotate the log by deleting the contents of the new target log
+		// If the day has changed or we rebooted, we need to potentially rotate the log by deleting the contents of the new target log
 		if(tmp_day != day)
 		{
-			// Delete the contents of the target log
 			day = tmp_day;
 			
-			// Erase the file contents
-			try {
-				BufferedWriter tmp_writer = new BufferedWriter(new FileWriter(rot_file_name));
-				tmp_writer.close();
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
+			// Check if the last entry in the log file is for today (in case we rebooted mid-day)
+			// Just in case the file doesn't exist, open for writing and close it
+			OpenLogFile(true);
+			CloseLogFile();
+			
+			// EXAMPLE LOG:  Fri Sep 14 07:57:38 PDT 2018 hostname AppName: OptionalTag: Message			
+			String tmp = GetLastMessage();
+			String d = new Date().toString();
+			d = d.substring(0,10);
+			
+			if(!tmp.contains(d))
+			{
+				// If not today, delete the contents of the target log
+				// Erase the file contents
+				System.out.println("DEBUG: Deleting content of:" + rot_file_name);
+				try {
+					BufferedWriter tmp_writer = new BufferedWriter(new FileWriter(rot_file_name));
+					tmp_writer.close();
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				System.out.println("DEBUG: Same day. Not deleting log file content");
 			}
 		}
 	}

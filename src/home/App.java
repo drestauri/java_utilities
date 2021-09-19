@@ -26,8 +26,8 @@ public class App {
 	// Making the logger static here 
 	static EventLogger log;
 	
-	static boolean testLogger = false;
-	static boolean testConfig = true;
+	static boolean testLogger = true;
+	static boolean testConfig = false;
 	
 	
 	public static void main(String[] args)
@@ -41,7 +41,7 @@ public class App {
 			log.SetHostName("MyDevice");
 			
 			// Rotating logs is true by default, but you can test turning it off as well:
-			log.SetRotateLogs(false);
+			//log.SetRotateLogs(false);
 			
 			// To make this work in a reasonable period of time for testing/demonstration, the following line in the EventLogger:
 			//		int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);

@@ -16,9 +16,6 @@ import java.util.Date;
  ***************************/
 
 /********** TODO ************
- * Need to set this up to detect if the log file for today was already written to today or not (i.e. if the app crashes
- * and restarts, I don't want to erase the log file)
- * 
  * Later:
  * > Add ability to retrieve logs (e.g. by date or date range, etc)
  ***************************/

@@ -188,8 +188,8 @@ public class EventLogger {
 		int loc = file_name.lastIndexOf('.');
 		String fn = file_name.substring(0, loc);
 		String ext = file_name.substring(loc);
-		//int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
-		int tmp_day = Calendar.getInstance().get(Calendar.SECOND)/10; // FOR DEBUGGING: Rotate log every 10 seconds
+		int tmp_day = Calendar.getInstance().get(Calendar.DAY_OF_WEEK);
+		//int tmp_day = Calendar.getInstance().get(Calendar.SECOND)/10; // FOR DEBUGGING: Rotate log every 10 seconds
 		
 		// Set the target file name:
 		rot_file_name = fn + Integer.toString(tmp_day) + ext;

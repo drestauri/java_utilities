@@ -12,10 +12,11 @@ import java.util.Date;
 
 /********** NOTES ***********
  * This is a COMPLETE event logger class.
- *  
+ * Version: 2021.12.25
  ***************************/
 
 /********** TODO ************
+ * > Add hostname and AppName to the log?
  * Later:
  * > Add ability to retrieve logs (e.g. by date or date range, etc)
  ***************************/
